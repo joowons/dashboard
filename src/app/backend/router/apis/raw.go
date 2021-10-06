@@ -8,19 +8,18 @@ package apis
 
 import (
 	"context"
-	"io"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
-
 	"github.com/gin-gonic/gin"
 	"github.com/kore3lab/dashboard/pkg/app"
 	"github.com/kore3lab/dashboard/pkg/config"
 	log "github.com/sirupsen/logrus"
+	"io"
 	coreV1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"net/http"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // Get api group list
@@ -235,9 +234,13 @@ func GetPodLogs(c *gin.Context) {
 
 	//  log options (with querystring)
 	options := coreV1.PodLogOptions{}
+	var limitLines = int64(60)
+	var limitSeconds = int64(600)
 	query, err := g.ParseQuery()
 	if err == nil {
 		if len(query) > 0 {
+			options.SinceSeconds = &limitSeconds
+			options.TailLines = &limitLines
 			if query["container"] != nil {
 				options.Container = query["container"][0]
 			}
@@ -289,6 +292,7 @@ func GetPodLogs(c *gin.Context) {
 	// write stream to client
 	g.C.Stream(func(w io.Writer) bool {
 		if data, ok := <-chanStream; ok {
+			log.Debug("log stream is Write")
 			w.Write(data)
 			return true
 		}
