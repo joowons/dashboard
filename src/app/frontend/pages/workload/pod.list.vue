@@ -128,10 +128,7 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
-			viewModel:{},
-      tabs: [],
-      active_tab : [1],
-      tabCounter: 0
+			viewModel:{}
 		}
 	},
 	watch: {
