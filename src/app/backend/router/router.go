@@ -107,6 +107,7 @@ func CreateUrlMappings() {
 	//      Namespaced
 	//          /apis/apps/v1/namespaces/kube-system/deployments/nginx
 	//          /apis/rbac.authorization.k8s.io/v1/namespaces/default/rolebindings/clusterrolebinding-2g782
+	Router.GET("/raw/clusters/:CLUSTER/apis/:GROUP", authenticate(), apis.GetRaw) // APIGroup
 	rawAPIs := Router.Group("/raw/clusters/:CLUSTER/apis/:GROUP/:VERSION", authenticate(), route())
 	{
 		rawAPIs.GET("", apis.GetRaw)                             // ""                                          > apiGroup - APIResourceList
