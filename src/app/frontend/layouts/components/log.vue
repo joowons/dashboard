@@ -100,10 +100,9 @@ export default {
         const reader = response.body.getReader();
         const Vue = this;
         let buffer = '';
-        let tabIndex = this.tabs.length-1;
-        if(index !== ''){
-          tabIndex = index;
-        }
+
+        const tabIndex = (index !== '') ? index : this.tabs.length-1;
+
         this.tabs[tabIndex].response = {containerName: containerName, podName: podName, read: reader};
         return reader.read().then(function process(result) {
           if (result.done) {
@@ -143,7 +142,6 @@ export default {
             let tailLine = item.data.length + this.tailLines;
             this.$axios.get(this.getApiUrl("", "pods", item.namespace, item.podName, "follow=0&container=" + item.containerName + "&tailLines=" + tailLine , true))
                 .then((resp) => {
-                  this.items = [];
                   const prevData = resp.data.split(item.firstTimestamp);
                   const logData = prevData[0].replace(/\[(?:\d{1}|\d{2})m/gi, '').split("\n");
                   this.tabs[index].data = logData.concat(item.data).filter(item => item.length > 0);

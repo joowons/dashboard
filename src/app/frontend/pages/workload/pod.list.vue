@@ -63,6 +63,42 @@
 									<template v-slot:cell(node)="data">
 										<a href="#" @click="viewModel=getViewLink('','nodes', '',  data.value); isShowSidebar=true;">{{ data.value }}</a>
 									</template>
+                  <template v-slot:head(menu)="data">
+                    <div class="text-center">
+                      <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                    </div>
+                  </template>
+                  <template v-slot:cell(menu)="data">
+                    <div class="text-center">
+                      <b-dropdown right no-caret variant="link" size="xs" class="m-n2">
+                        <template #button-content>
+                          <b-button class="btn btn-tool" variant="link">
+                            <i class="fas fa-ellipsis-v" aria-hidden="true"></i>
+                          </b-button>
+                        </template>
+                        <b-dropdown-item v-bind:id="'shell_'+ data.index" href="#" @click="showLogs(data.value)"><i class="fas fa-terminal"></i> <span>&nbsp Terminal</span><i v-if ="data.value.containerStatuses.length > 1 && data.value.phase === 'Running'" class="fas fa-chevron-right pl-3"/></b-dropdown-item>
+                        <b-dropdown-item v-bind:id="'log_'+ data.index" href="#"><i class="fas fa-file-alt"></i> <span class="pl-2">&nbsp Logs</span><i v-if ="data.value.containerStatuses.length > 1" class="fas fa-chevron-right pl-3"/></b-dropdown-item>
+                        <b-dropdown v-if="data.value.containerStatuses.length > 1" id="dropdown-2" text="Dropdown Button 2" class="m-md-2">
+                          <b-dropdown-item>First Action 2</b-dropdown-item>
+                          <b-dropdown-item>Second Action 2</b-dropdown-item>
+                        </b-dropdown>
+                      </b-dropdown>
+                    </div>
+                    <b-popover v-if ="data.value.containerStatuses.length > 1 && data.value.phase === 'Running'" triggers='hover' v-bind:target="'shell_'+ data.index" placement="left" boundary="window" boundary-padding="0" >
+                      <ul class="list-unstyled m-0">
+                        <li v-for="(val,idx) in data.value.containerStatuses" v-bind:key="idx"  class="ml-n2 mr-n2">
+                          <button v-if="val.ready" type="button" class="btn btn-tool" @click="showLogs(data.value);"><a class="badge badge-success"> {{""}}</a> {{ val.name }}</button>
+                        </li>
+                      </ul>
+                    </b-popover>
+                    <b-popover v-if ="data.value.containerStatuses.length > 1"  triggers='hover' v-bind:target="'log_'+ data.index" placement="left" boundary="window" boundary-padding="0" >
+                      <ul class="list-unstyled m-0">
+                        <li v-for="(val,idx) in data.value.containerStatuses" v-bind:key="idx"  class="ml-n2 mr-n2">
+                          <button type="button" class="btn btn-tool" @click="showLogs(data.value);"><a class="badge badge-success"> {{""}}</a> {{ val.name }} </button>
+                        </li>
+                      </ul>
+                    </b-popover>
+                  </template>
 								</b-table>
 							</div>
 							<b-pagination v-model="currentPage" :per-page="itemsPerPage" :total-rows="totalItems" size="sm" align="center"></b-pagination>
@@ -118,7 +154,8 @@ export default {
 				{ key: "node", label: "Node", sortable: true },
 				{ key: "qos", label: "QoS", sortable: true  },
 				{ key: "creationTimestamp", label: "Age", sortable: true, formatter: this.getElapsedTime },
-				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus }
+				{ key: "status", label: "Status", sortable: true, formatter: this.formatStatus },
+        { key: "menu", label: ""}
 			],
 			isBusy: true,
 			origin: [],
@@ -128,7 +165,8 @@ export default {
 			currentPage: 1,
 			totalItems: 0,
 			isShowSidebar: false,
-			viewModel:{}
+			viewModel:{},
+      isDropdownVisible: false
 		}
 	},
 	watch: {
@@ -145,7 +183,10 @@ export default {
 		if(this.currentContext()) this.$nuxt.$emit("navbar-context-selected");
 	},
 	methods: {
-		onRowSelected(items) {
+	  showLogs(data) {
+	    //console.log('!!!!!!!!!!!!!!', data)
+    },
+    onRowSelected(items) {
 			this.isShowSidebar = (items && items.length > 0)
 			if (this.isShowSidebar) this.viewModel = this.getViewLink("", "pods", items[0].namespace, items[0].name)
 		},
@@ -179,7 +220,8 @@ export default {
 							creationTimestamp: el.metadata.creationTimestamp,
 							deletionTimestamp: el.metadata.deletionTimestamp,
 							node: el.spec.nodeName,
-							qos: el.status.qosClass
+							qos: el.status.qosClass,
+              menu: el.status,
 						});
 					});
 					this.origin = this.items;
